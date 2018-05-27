@@ -179,6 +179,7 @@ class CtaTemplate(object):
         content = self.name + ':' + content
         self.ctaEngine.writeCtaLog(content)
         
+    
     #----------------------------------------------------------------------
     def putEvent(self):
         """发出策略状态变化事件"""

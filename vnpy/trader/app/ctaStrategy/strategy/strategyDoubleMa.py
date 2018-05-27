@@ -22,6 +22,7 @@ class DoubleMaStrategy(CtaTemplate):
     fastWindow = 1    # 快速均线参数
     slowWindow = 30     # 慢速均线参数
     initDays = 31      # 初始化数据所用的天数
+    volume=1
     
     # 策略变量
     fastMa0 = EMPTY_FLOAT   # 当前最新的快速EMA
@@ -36,7 +37,9 @@ class DoubleMaStrategy(CtaTemplate):
                  'author',
                  'vtSymbol',
                  'fastWindow',
-                 'slowWindow']    
+                 'slowWindow',
+                 'volume'
+                 ]    
     
     # 变量列表，保存了变量的名称
     varList = ['inited',
@@ -66,7 +69,7 @@ class DoubleMaStrategy(CtaTemplate):
     #----------------------------------------------------------------------
     def onInit(self):
         """初始化策略（必须由用户继承实现）"""
-        self.writeCtaLog(u'双EMA演示策略初始化')
+        self.writeCtaLog(u'MA组合演示策略初始化')
         
         initData = self.loadBar(self.initDays)
         for bar in initData:
@@ -77,13 +80,13 @@ class DoubleMaStrategy(CtaTemplate):
     #----------------------------------------------------------------------
     def onStart(self):
         """启动策略（必须由用户继承实现）"""
-        self.writeCtaLog(u'双EMA演示策略启动')
+        self.writeCtaLog(u'MA组合演示策略初始化')
         self.putEvent()
     
     #----------------------------------------------------------------------
     def onStop(self):
         """停止策略（必须由用户继承实现）"""
-        self.writeCtaLog(u'双EMA演示策略停止')
+        self.writeCtaLog(u'MA组合演示策略初始化')
         self.putEvent()
         
     #----------------------------------------------------------------------
@@ -120,18 +123,18 @@ class DoubleMaStrategy(CtaTemplate):
         if crossOver:
             # 如果金叉时手头没有持仓，则直接做多
             if self.pos == 0:
-                self.buy(bar.close, 1)
+                self.buy(bar.close, self.volume)
             # 如果有空头持仓，则先平空，再做多
             elif self.pos < 0:
-                self.cover(bar.close, 1)
-                self.buy(bar.close, 1)
+                self.cover(bar.close, self.volume)
+                self.buy(bar.close, self.volume)
         # 死叉和金叉相反
         elif crossBelow:
             if self.pos == 0:
-                self.short(bar.close, 1)
+                self.short(bar.close, self.volume)
             elif self.pos > 0:
-                self.sell(bar.close, 1)
-                self.short(bar.close, 1)
+                self.sell(bar.close, self.volume)
+                self.short(bar.close, self.volume)
                 
         # 发出状态更新事件
         self.putEvent()

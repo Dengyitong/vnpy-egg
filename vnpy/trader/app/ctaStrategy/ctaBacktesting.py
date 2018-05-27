@@ -16,6 +16,7 @@ import pymongo
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 # 如果安装了seaborn则设置为白色风格
 try:
@@ -1096,6 +1097,7 @@ class BacktestingEngine(object):
         self.output(u'收益标准差：\t%s%%' % formatNumber(result['returnStd']))
         self.output(u'Sharpe Ratio：\t%s' % formatNumber(result['sharpeRatio']))
         
+       
         # 绘图
         fig = plt.figure(figsize=(10, 16))
         
@@ -1108,9 +1110,12 @@ class BacktestingEngine(object):
         pDrawdown.fill_between(range(len(df)), df['drawdown'].values)
         
         pPnl = plt.subplot(4, 1, 3)
-        pPnl.set_title('Daily Pnl') 
-        df['netPnl'].plot(kind='bar', legend=False, grid=False, xticks=[])
+        pPnl.set_title('Daily Pnl')
+        #df['netPnl'].plot(kind='bar',legend=False, grid=False,xticks=[])
+        plt.bar(df['netPnl'].index,df['netPnl'].values)
 
+           
+        
         pKDE = plt.subplot(4, 1, 4)
         pKDE.set_title('Daily Pnl Distribution')
         df['netPnl'].hist(bins=50)
