@@ -20,16 +20,24 @@ class DoubleMaStrategy(CtaTemplate):
     
     # 策略参数
     fastWindow = 1    # 快速均线参数
-    slowWindow = 30     # 慢速均线参数
-    initDays = 31      # 初始化数据所用的天数
-    vol=1
+    md1Winddow=5      #中速均线参数1
+    md2Winddow=10     #中速均线参数2
+    slowWindow = 30   # 慢速均线参数
+    offsetWindow=60  #偏移值参数（收盘价-最低价）/（最高价-最低价）
+    initDays = 0      # 初始化数据所用的天数
+    vol=1               #开仓手数
     
     # 策略变量
     fastMa0 = EMPTY_FLOAT   # 当前最新的快速EMA
     fastMa1 = EMPTY_FLOAT   # 上一根的快速EMA
     
-    slowMa0 = EMPTY_FLOAT
-    slowMa1 = EMPTY_FLOAT
+    slowMa0 = EMPTY_FLOAT  # 当前最新的慢速EMA
+    slowMa1 = EMPTY_FLOAT  # 上一根的慢速EMA
+    
+    md1MA0=EMPTY_FLOAT    #当前最新的中速EMA1
+    md2MA0=EMPTY_FLOAT    #当前最新的中速EMA2
+    
+    offsetValue=EMPTY_FLOAT  #当前最新的偏移值
     
     # 参数列表，保存了参数的名称
     paramList = ['name',
