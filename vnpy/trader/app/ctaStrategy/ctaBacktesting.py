@@ -869,6 +869,9 @@ class BacktestingEngine(object):
         self.tradeCount = 0
         self.tradeDict.clear()
         
+        # 清空日线回测结果相关
+        self.dailyResultDict.clear()
+        
     #----------------------------------------------------------------------
     def runOptimization(self, strategyClass, optimizationSetting):
         """优化参数"""
@@ -887,9 +890,10 @@ class BacktestingEngine(object):
             self.output('-' * 30)
             self.output('setting: %s' %str(setting))
             self.initStrategy(strategyClass, setting)
-            self.runBacktesting()
+            self.runBacktesting()        
             df = self.calculateDailyResult()
-            df, d = self.calculateDailyStatistics(df)            
+            df, d = self.calculateDailyStatistics(df) 
+            
             try:
                 targetValue = d[targetName]
             except KeyError:
@@ -929,7 +933,7 @@ class BacktestingEngine(object):
         pool.join()
         
         # 显示结果
-        resultList = [res.get() for res in l]
+        resultList = [res.get() for res in l] 
         resultList.sort(reverse=True, key=lambda result:result[1])
         self.output('-' * 30)
         self.output(u'优化结果：')

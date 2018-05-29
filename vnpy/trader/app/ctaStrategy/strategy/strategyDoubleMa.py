@@ -22,7 +22,7 @@ class DoubleMaStrategy(CtaTemplate):
     fastWindow = 1    # 快速均线参数
     slowWindow = 30     # 慢速均线参数
     initDays = 31      # 初始化数据所用的天数
-    volume=1
+    vol=1
     
     # 策略变量
     fastMa0 = EMPTY_FLOAT   # 当前最新的快速EMA
@@ -38,8 +38,7 @@ class DoubleMaStrategy(CtaTemplate):
                  'vtSymbol',
                  'fastWindow',
                  'slowWindow',
-                 'volume'
-                 ]    
+                 'vol']    
     
     # 变量列表，保存了变量的名称
     varList = ['inited',
@@ -123,18 +122,18 @@ class DoubleMaStrategy(CtaTemplate):
         if crossOver:
             # 如果金叉时手头没有持仓，则直接做多
             if self.pos == 0:
-                self.buy(bar.close, self.volume)
+                self.buy(bar.close, self.vol)
             # 如果有空头持仓，则先平空，再做多
             elif self.pos < 0:
-                self.cover(bar.close, self.volume)
-                self.buy(bar.close, self.volume)
+                self.cover(bar.close, self.vol)
+                self.buy(bar.close, self.vol)
         # 死叉和金叉相反
         elif crossBelow:
             if self.pos == 0:
-                self.short(bar.close, self.volume)
+                self.short(bar.close, self.vol)
             elif self.pos > 0:
-                self.sell(bar.close, self.volume)
-                self.short(bar.close, self.volume)
+                self.sell(bar.close, self.vol)
+                self.short(bar.close, self.vol)
                 
         # 发出状态更新事件
         self.putEvent()
