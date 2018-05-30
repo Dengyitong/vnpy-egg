@@ -20,8 +20,8 @@ class DoubleMaStrategy(CtaTemplate):
     
     # 策略参数
     fastWindow = 1    # 快速均线参数
-    md1Winddow=5      #中速均线参数1
-    md2Winddow=10     #中速均线参数2
+    md1Window=5      #中速均线参数1
+    md2Window=10     #中速均线参数2
     slowWindow = 30   # 慢速均线参数
     offsetWindow=60  #偏移值参数（收盘价-最低价）/（最高价-最低价）
     initDays = 0      # 初始化数据所用的天数
@@ -46,7 +46,11 @@ class DoubleMaStrategy(CtaTemplate):
                  'vtSymbol',
                  'fastWindow',
                  'slowWindow',
-                 'vol']    
+                 'md1Window',
+                 'md2Window',
+                 'offsetWindow',
+                 'vol',
+                 '']    
     
     # 变量列表，保存了变量的名称
     varList = ['inited',
@@ -55,7 +59,11 @@ class DoubleMaStrategy(CtaTemplate):
                'fastMa0',
                'fastMa1',
                'slowMa0',
-               'slowMa1']  
+               'slowMa1',
+               'md1MA0',
+               'md2MA0',
+               'offsetValue',
+               ]  
     
     # 同步列表，保存了需要保存到数据库的变量名称
     syncList = ['pos']
@@ -120,28 +128,55 @@ class DoubleMaStrategy(CtaTemplate):
         self.slowMa0 = slowMa[-1]
         self.slowMa1 = slowMa[-2]
         
+        #计算中速均线 
+        self.md1MA0 =am.ma(self.md1Window)     
+        self.md2MA0 = am.ma(self.md2Window)
+        
+        #计算偏移值
+        self.offsetValue,close,high,low=am.offset(self.offsetWindow)
 
         # 判断买卖
-        crossOver = self.fastMa0>self.slowMa0 and self.fastMa1<self.slowMa1     # 金叉上穿
-        crossBelow = self.fastMa0<self.slowMa0 and self.fastMa1>self.slowMa1    # 死叉下穿
+        crossOver = self.fastMa0>self.slowMa0 and self.fastMa1<self.slowMa1 and\
+           self.md1MA0>self.md2MA0 and self.offsetValue<0.5# 金叉上穿
+        
+        crossBelow = self.fastMa0<self.slowMa0 and self.fastMa1>self.slowMa1 and\
+            self.md1MA0 < self.md2MA0 and self.offsetValue > 0.5# 死叉下穿
         
         # 金叉和死叉的条件是互斥
         # 所有的委托均以K线收盘价委托（这里有一个实盘中无法成交的风险，考虑添加对模拟市价单类型的支持）
+        '''        
+        if bar.date=='20160505':
+            print self.offsetValue,close,high,low,bar.datetime
+        '''
         if crossOver:
-            # 如果金叉时手头没有持仓，则直接做多
+            print self.offsetValue,close,high,low,bar.date
+            # 如果金叉时手头没有持仓或者持有多仓，则直接做多或加仓
             if self.pos == 0:
                 self.buy(bar.close, self.vol)
+                print '做多：',self.vol
             # 如果有空头持仓，则先平空，再做多
             elif self.pos < 0:
-                self.cover(bar.close, self.vol)
+                self.cover(bar.close, abs(self.pos))
                 self.buy(bar.close, self.vol)
+                print '平仓/做多：',abs(self.pos),self.vol
+            #如果金叉时手头还有持仓，则加多
+            elif self.pos > 0:
+                self.buy(bar.close, self.vol)
+                print '加多：',self.vol
         # 死叉和金叉相反
         elif crossBelow:
+            print self.offsetValue,close,high,low,bar.date
             if self.pos == 0:
                 self.short(bar.close, self.vol)
+                print '做空：',self.vol
             elif self.pos > 0:
-                self.sell(bar.close, self.vol)
+                self.sell(bar.close, abs(self.pos))
                 self.short(bar.close, self.vol)
+                print '平仓/做空：',abs(self.pos),self.vol
+             #如果死叉时手头还有持仓，则加空
+            elif self.pos < 0:
+                self.short(bar.close, self.vol)
+                print '加空：',self.vol
                 
         # 发出状态更新事件
         self.putEvent()

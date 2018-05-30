@@ -522,13 +522,24 @@ class ArrayManager(object):
             return result
         return result[-1]
         
-        #----------------------------------------------------------------------
+    #----------------------------------------------------------------------
     def ma(self, n, array=False):
         """简单均线MA"""
         result = talib.MA(self.close, n)
         if array:
             return result
         return result[-1]
+        
+    #----------------------------------------------------------------------
+    def offset(self, n):
+        """偏移值(收盘价-最低价）/(最高价-最低价)"""
+        close = self.close[-1]
+        his=self.close[-n:]
+        his_positive=his[his>0]
+        high=np.max(his_positive)
+        low=np.min(his_positive)
+        offsetvalue=(close-low)/(high-low)
+        return offsetvalue,close,high,low
         
     #----------------------------------------------------------------------
     def std(self, n, array=False):
