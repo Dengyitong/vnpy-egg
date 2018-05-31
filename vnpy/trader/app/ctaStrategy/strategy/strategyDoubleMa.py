@@ -23,9 +23,10 @@ class DoubleMaStrategy(CtaTemplate):
     md1Window=5      #中速均线参数1
     md2Window=10     #中速均线参数2
     slowWindow = 30   # 慢速均线参数
-    offsetWindow=60  #偏移值参数（收盘价-最低价）/（最高价-最低价）
+    offsetWindow=60     #偏移值窗口（收盘价-最低价）/（最高价-最低价）
     initDays = 0      # 初始化数据所用的天数
-    vol=1               #开仓手数
+    fixedSize=1       #每次交易的数量
+    stopPoint=50        #固定止损点
     
     # 策略变量
     fastMa0 = EMPTY_FLOAT   # 当前最新的快速EMA
@@ -49,8 +50,8 @@ class DoubleMaStrategy(CtaTemplate):
                  'md1Window',
                  'md2Window',
                  'offsetWindow',
-                 'vol',
-                 '']    
+                 'fixedSize',                
+                 'stopPoint']    
     
     # 变量列表，保存了变量的名称
     varList = ['inited',
@@ -144,40 +145,47 @@ class DoubleMaStrategy(CtaTemplate):
         
         # 金叉和死叉的条件是互斥
         # 所有的委托均以K线收盘价委托（这里有一个实盘中无法成交的风险，考虑添加对模拟市价单类型的支持）
-        '''        
-        if bar.date=='20160505':
-            print self.offsetValue,close,high,low,bar.datetime
-        '''
+
         if crossOver:
             print self.offsetValue,close,high,low,bar.date
-            # 如果金叉时手头没有持仓或者持有多仓，则直接做多或加仓
+            # 如果金叉时手头没有持仓，则直接做多
             if self.pos == 0:
-                self.buy(bar.close, self.vol)
-                print '做多：',self.vol
+                self.buy(bar.close, self.fixedSize)
+           
+                print '做多：',self.fixedSize
             # 如果有空头持仓，则先平空，再做多
             elif self.pos < 0:
                 self.cover(bar.close, abs(self.pos))
-                self.buy(bar.close, self.vol)
-                print '平仓/做多：',abs(self.pos),self.vol
+                self.buy(bar.close, self.fixedSize)
+
+                print '平仓/做多：',abs(self.pos),self.fixedSize
             #如果金叉时手头还有持仓，则加多
             elif self.pos > 0:
-                self.buy(bar.close, self.vol)
-                print '加多：',self.vol
+                self.buy(bar.close, self.fixedSize)
+
+                print '加多：',self.fixedSize
         # 死叉和金叉相反
         elif crossBelow:
             print self.offsetValue,close,high,low,bar.date
             if self.pos == 0:
-                self.short(bar.close, self.vol)
-                print '做空：',self.vol
+                self.short(bar.close, self.fixedSize)
+
+                print '做空：',self.fixedSize
             elif self.pos > 0:
                 self.sell(bar.close, abs(self.pos))
-                self.short(bar.close, self.vol)
-                print '平仓/做空：',abs(self.pos),self.vol
+                self.short(bar.close, self.fixedSize)
+
+                print '平仓/做空：',abs(self.pos),self.fixedSize
              #如果死叉时手头还有持仓，则加空
             elif self.pos < 0:
-                self.short(bar.close, self.vol)
-                print '加空：',self.vol
+                self.short(bar.close, self.fixedSize)
+
+                print '加空：',self.fixedSize
                 
+                
+        # 同步数据到数据库
+        self.saveSyncData()
+
         # 发出状态更新事件
         self.putEvent()
         
@@ -191,7 +199,10 @@ class DoubleMaStrategy(CtaTemplate):
     def onTrade(self, trade):
         """收到成交推送（必须由用户继承实现）"""
         # 对于无需做细粒度委托控制的策略，可以忽略onOrder
-        pass
+        if self.pos>0:
+            pass
+        elif self.pos<0:
+            self
     
     #----------------------------------------------------------------------
     def onStopOrder(self, so):
