@@ -24,6 +24,7 @@ class DoubleMaStrategy(CtaTemplate):
     md2Window=10     #中速均线参数2
     slowWindow = 30   # 慢速均线参数
     offsetWindow=60     #偏移值窗口（收盘价-最低价）/（最高价-最低价）
+    threshold=0.5      #偏移阈值
     initDays = 0      # 初始化数据所用的天数
     fixedSize=1       #每次交易的数量
     stopPoint=50        #固定止损点
@@ -50,6 +51,7 @@ class DoubleMaStrategy(CtaTemplate):
                  'md1Window',
                  'md2Window',
                  'offsetWindow',
+                 'threshold',
                  'fixedSize',                
                  'stopPoint']    
     
@@ -138,10 +140,10 @@ class DoubleMaStrategy(CtaTemplate):
 
         # 判断买卖
         crossOver = self.fastMa0>self.slowMa0 and self.fastMa1<self.slowMa1 and\
-           self.md1MA0>self.md2MA0 and self.offsetValue<0.5# 金叉上穿
+           self.md1MA0>self.md2MA0 and self.offsetValue< (1-self.threshold)# 金叉上穿
         
         crossBelow = self.fastMa0<self.slowMa0 and self.fastMa1>self.slowMa1 and\
-            self.md1MA0 < self.md2MA0 and self.offsetValue > 0.5# 死叉下穿
+            self.md1MA0 < self.md2MA0 and self.offsetValue > self.threshold # 死叉下穿
         
         # 金叉和死叉的条件是互斥
         # 所有的委托均以K线收盘价委托（这里有一个实盘中无法成交的风险，考虑添加对模拟市价单类型的支持）
@@ -199,10 +201,6 @@ class DoubleMaStrategy(CtaTemplate):
     def onTrade(self, trade):
         """收到成交推送（必须由用户继承实现）"""
         # 对于无需做细粒度委托控制的策略，可以忽略onOrder
-        if self.pos>0:
-            pass
-        elif self.pos<0:
-            self
     
     #----------------------------------------------------------------------
     def onStopOrder(self, so):

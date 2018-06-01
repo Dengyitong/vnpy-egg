@@ -363,6 +363,7 @@ class BacktestingEngine(object):
                 order.status = STATUS_ALLTRADED
                 self.strategy.onOrder(order)
                 
+                
                 # 从字典中删除该限价单
                 if orderID in self.workingLimitOrderDict:
                     del self.workingLimitOrderDict[orderID]
