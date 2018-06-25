@@ -138,6 +138,8 @@ class DoubleMaStrategy(CtaTemplate):
         #计算偏移值
         self.offsetValue,close,high,low=am.offset(self.offsetWindow)
 
+        if bar.date=='20180606':
+            print self.offsetValue,high,low
         # 判断买卖
         crossOver = self.fastMa0>self.slowMa0 and self.fastMa1<self.slowMa1 and\
            self.md1MA0>self.md2MA0 and self.offsetValue< (1-self.threshold)# 金叉上穿
