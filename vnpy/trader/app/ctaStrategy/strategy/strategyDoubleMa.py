@@ -114,6 +114,8 @@ class DoubleMaStrategy(CtaTemplate):
         
     #----------------------------------------------------------------------
     def onBar(self, bar):
+                
+        
         """收到Bar推送（必须由用户继承实现）"""
         am = self.am        
         am.updateBar(bar)
@@ -201,6 +203,14 @@ class DoubleMaStrategy(CtaTemplate):
     def onTrade(self, trade):
         """收到成交推送（必须由用户继承实现）"""
         # 对于无需做细粒度委托控制的策略，可以忽略onOrder
+        if self.pos!=0:
+            if trade.direction =='多':
+                print
+            elif trade.direction =='空':
+                pass
+            else；
+                pass
+            #print trade.symbol,trade.price,trade.volume,trade.direction
         
     #----------------------------------------------------------------------
     def onStopOrder(self, so):
