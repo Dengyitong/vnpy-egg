@@ -114,8 +114,6 @@ class DoubleMaStrategy(CtaTemplate):
         
     #----------------------------------------------------------------------
     def onBar(self, bar):
-                
-        
         """收到Bar推送（必须由用户继承实现）"""
         am = self.am        
         am.updateBar(bar)
@@ -140,6 +138,8 @@ class DoubleMaStrategy(CtaTemplate):
         #计算偏移值
         self.offsetValue,close,high,low=am.offset(self.offsetWindow)
 
+        if bar.date=='20180606':
+            print self.offsetValue,high,low
         # 判断买卖
         crossOver = self.fastMa0>self.slowMa0 and self.fastMa1<self.slowMa1 and\
            self.md1MA0>self.md2MA0 and self.offsetValue< (1-self.threshold)# 金叉上穿
@@ -203,14 +203,6 @@ class DoubleMaStrategy(CtaTemplate):
     def onTrade(self, trade):
         """收到成交推送（必须由用户继承实现）"""
         # 对于无需做细粒度委托控制的策略，可以忽略onOrder
-        if self.pos!=0:
-            if trade.direction =='多':
-                print
-            elif trade.direction =='空':
-                pass
-            else；
-                pass
-            #print trade.symbol,trade.price,trade.volume,trade.direction
         
     #----------------------------------------------------------------------
     def onStopOrder(self, so):
