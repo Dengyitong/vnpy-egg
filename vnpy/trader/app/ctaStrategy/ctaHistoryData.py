@@ -100,7 +100,73 @@ def loadMcCsv(fileName, dbName, symbol):
      
     print u'插入完毕，耗时：%s' % (time()-start)
  
-
+def loadWindCsv(fileName, dbName, symbol):
+    """将Wind行情界面导出的csv格式的历史数据插入到Mongo数据库中"""
+    
+    start = time()
+    print u'开始读取excel文件%s中的数据插入到%s的%s中' %(fileName, dbName, symbol)
+    
+    # 锁定集合，并创建索引
+    client = pymongo.MongoClient(globalSetting['mongoHost'], globalSetting['mongoPort']) 
+    collection = client[dbName][symbol]
+    collection.ensure_index([('datetime', pymongo.ASCENDING)], unique=True)   
+    
+    # 读取数据和插入到数据库
+    import pandas as pd
+    data=pd.read_excel(fileName)
+    for name,d in data.iterrows():
+        bar = VtBarData()
+        bar.vtSymbol = symbol
+        bar.symbol = symbol
+        
+        bar.open = float(d[3])
+        bar.high = float(d[4])
+        bar.low = float(d[5])
+        bar.close = float(d[6])
+        
+        bar.datetime = d[2].to_datetime()
+        bar.date = bar.datetime.date().strftime('%Y%m%d')
+        bar.time = bar.datetime.time().strftime('%H:%M:%S')
+            
+        bar.volume = d[8]
+        collection.update_one({'datetime': bar.datetime}, {'$set':bar.__dict__}, upsert=True)  
+     
+    print u'插入完毕，耗时：%s' % (time()-start)
+    
+def loadWindPlusCsv(fileName, dbName, symbol):
+    """将Wind行情界面导出的csv格式的历史数据插入到Mongo数据库中"""
+    
+    start = time()
+    print u'开始读取excel文件%s中的数据插入到%s的%s中' %(fileName, dbName, symbol)
+    
+    # 锁定集合，并创建索引
+    client = pymongo.MongoClient(globalSetting['mongoHost'], globalSetting['mongoPort']) 
+    collection = client[dbName][symbol]
+    collection.ensure_index([('datetime', pymongo.ASCENDING)], unique=True)   
+    
+    # 读取数据和插入到数据库
+    import pandas as pd
+    data=pd.read_excel(fileName)
+    for name,d in data.iterrows():
+        bar = VtBarData()
+        bar.vtSymbol = symbol
+        bar.symbol = symbol
+        
+        bar.open = float(d[3])
+        bar.high = float(d[4])
+        bar.low = float(d[5])
+        bar.close = float(d[6])
+        
+        bar.datetime = d[2].to_datetime()
+        bar.date = bar.datetime.date().strftime('%Y%m%d')
+        bar.time = bar.datetime.time().strftime('%H:%M:%S')
+            
+        bar.volume = d[9]
+        bar.openInterest = d[10]
+        collection.update_one({'datetime': bar.datetime}, {'$set':bar.__dict__}, upsert=True)  
+     
+    print u'插入完毕，耗时：%s' % (time()-start)
+    
 #----------------------------------------------------------------------
 def loadTbCsv(fileName, dbName, symbol):
     """将TradeBlazer导出的csv格式的历史分钟数据插入到Mongo数据库中"""
