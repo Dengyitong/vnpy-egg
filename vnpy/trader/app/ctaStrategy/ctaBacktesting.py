@@ -138,7 +138,8 @@ class BacktestingEngine(object):
         
         initTimeDelta = timedelta(initDays)
         self.strategyStartDate = self.dataStartDate + initTimeDelta
-        
+       
+    
     #----------------------------------------------------------------------
     def setEndDate(self, endDate=''):
         """设置回测的结束日期"""
@@ -154,6 +155,7 @@ class BacktestingEngine(object):
     def setBacktestingMode(self, mode):
         """设置回测模式"""
         self.mode = mode
+       
     
     #----------------------------------------------------------------------
     def setDatabase(self, dbName, symbol):
@@ -195,7 +197,7 @@ class BacktestingEngine(object):
         """载入历史数据"""
         self.dbClient = pymongo.MongoClient(globalSetting['mongoHost'], globalSetting['mongoPort'])
         collection = self.dbClient[self.dbName][self.symbol]          
-
+        self.output(u'-'*30)
         self.output(u'开始载入数据')
       
         # 首先根据回测模式，确认要使用的数据类
@@ -241,7 +243,8 @@ class BacktestingEngine(object):
         else:
             dataClass = VtTickData
             func = self.newTick
-
+            
+        
         self.output(u'开始回测')
         
         self.strategy.inited = True
@@ -253,13 +256,11 @@ class BacktestingEngine(object):
         self.output(u'策略启动完成')
         
         self.output(u'开始回放数据')
-
         for d in self.dbCursor:
             data = dataClass()
             data.__dict__ = d
             func(data)  
-           
-            
+        self.output(u'-'*30)
         self.output(u'数据回放结束')
         
     #----------------------------------------------------------------------
@@ -294,6 +295,16 @@ class BacktestingEngine(object):
         """
         self.strategy = strategyClass(self, setting)
         self.strategy.name = self.strategy.className
+        
+        
+        self.output(u'回测模式：\t%s'%self.mode)
+        self.output(u'数据开始日期：\t%s'%self.dataStartDate)
+        self.output(u'策略开始日期：\t%s'%self.strategyStartDate)
+        if self.dataEndDate==None:
+            self.output(u'策略结束日期：\t数据结束日期')
+        else:
+            self.output(u'策略结束日期：\t%s'%self.endDate)
+
     
     #----------------------------------------------------------------------
     def crossLimitOrder(self):
@@ -1033,6 +1044,12 @@ class BacktestingEngine(object):
         else:
             sharpeRatio = 0
             
+        if maxDdPercent:
+            #Calmar比率(Calmar Ratio) 描述的是收益和最大回撤之间的关系。计算方式为年化收益率与历史最大回撤之间的比率。
+            calmar = annualizedReturn / abs(maxDdPercent) 
+        else:
+            calmar = 0   
+            
         # 返回结果
         result = {
             'startDate': startDate,
@@ -1057,7 +1074,8 @@ class BacktestingEngine(object):
             'annualizedReturn': annualizedReturn,
             'dailyReturn': dailyReturn,
             'returnStd': returnStd,
-            'sharpeRatio': sharpeRatio
+            'sharpeRatio': sharpeRatio,
+            'calmar': calmar
         }
         
         return df, result
@@ -1101,11 +1119,12 @@ class BacktestingEngine(object):
         self.output(u'日均收益率：\t%s%%' % formatNumber(result['dailyReturn']))
         self.output(u'收益标准差：\t%s%%' % formatNumber(result['returnStd']))
         self.output(u'Sharpe Ratio：\t%s' % formatNumber(result['sharpeRatio']))
+        self.output(u'calmar比率：\t%s' % formatNumber(result['calmar']))
         
        
         # 绘图
         fig = plt.figure(figsize=(10, 16))
-        
+
         pBalance = plt.subplot(4, 1, 1)
         pBalance.set_title('Balance')
         df['balance'].plot(legend=True)
@@ -1113,18 +1132,12 @@ class BacktestingEngine(object):
         pDrawdown = plt.subplot(4, 1, 2)
         pDrawdown.set_title('Drawdown')
         pDrawdown.fill_between(range(len(df)), df['drawdown'].values)
-        
-        pPnl = plt.subplot(4, 1, 3)
-        pPnl.set_title('Daily Pnl')
-        #df['netPnl'].plot(kind='bar',legend=False, grid=False,xticks=[])
-        plt.bar(df['netPnl'].index,df['netPnl'].values)
-
            
-        
-        pKDE = plt.subplot(4, 1, 4)
+        pKDE = plt.subplot(4, 1, 3)
         pKDE.set_title('Daily Pnl Distribution')
         df['netPnl'].hist(bins=50)
         
+        plt.subplots_adjust(hspace=0.5)
         plt.show()
        
         
